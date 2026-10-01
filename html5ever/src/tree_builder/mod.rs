@@ -1119,6 +1119,16 @@ where
             .any(|elem| self.html_elem_named(elem, name.clone()))
     }
 
+    /// <https://html.spec.whatwg.org/multipage/#parsing-template-contents>
+    fn parsing_template_contents(&self) -> bool {
+        self.in_html_elem_named(local_name!("template"))
+            || self
+                .context_elem
+                .borrow()
+                .as_ref()
+                .is_some_and(|elem| self.html_elem_named(elem, local_name!("template")))
+    }
+
     fn current_node_named(&self, name: LocalName) -> bool {
         self.html_elem_named(&self.current_node(), name)
     }
@@ -1385,7 +1395,8 @@ where
         let qname = QualName::new(None, ns, name);
         let form_is_associatable = form_associatable(qname.expanded())
             && self.form_elem.borrow().is_some()
-            && !self.in_html_elem_named(local_name!("template"))
+            && !self.parsing_template_contents()
+            && !self.is_fragment()
             && !(listed(qname.expanded())
                 && attrs
                     .iter()

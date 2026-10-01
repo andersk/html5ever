@@ -541,14 +541,12 @@ where
                 },
 
                 Token::Tag(tag @ tag!(<form>)) => {
-                    if self.form_elem.borrow().is_some()
-                        && !self.in_html_elem_named(local_name!("template"))
-                    {
+                    if self.form_elem.borrow().is_some() && !self.parsing_template_contents() {
                         self.sink.parse_error(Borrowed("nested forms"));
                     } else {
                         self.close_p_element_in_button_scope();
                         let elem = self.insert_element_for(tag);
-                        if !self.in_html_elem_named(local_name!("template")) {
+                        if !self.parsing_template_contents() {
                             *self.form_elem.borrow_mut() = Some(elem);
                         }
                     }
@@ -630,7 +628,7 @@ where
                 },
 
                 Token::Tag(tag!(</form>)) => {
-                    if !self.in_html_elem_named(local_name!("template")) {
+                    if !self.parsing_template_contents() {
                         let Some(node) = self.form_elem.take() else {
                             self.sink
                                 .parse_error(Borrowed("Null form element pointer on </form>"));
@@ -1116,10 +1114,12 @@ where
 
                 Token::Tag(tag @ tag!(<form>)) => {
                     self.unexpected(&tag);
-                    if !self.in_html_elem_named(local_name!("template"))
-                        && self.form_elem.borrow().is_none()
-                    {
-                        *self.form_elem.borrow_mut() = Some(self.insert_and_pop_element_for(tag));
+                    let parsing_template_contents = self.parsing_template_contents();
+                    if self.form_elem.borrow().is_none() || parsing_template_contents {
+                        let elem = self.insert_and_pop_element_for(tag);
+                        if !parsing_template_contents {
+                            *self.form_elem.borrow_mut() = Some(elem);
+                        }
                     }
                     ProcessResult::Done
                 },
