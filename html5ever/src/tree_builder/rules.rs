@@ -356,6 +356,7 @@ where
             InsertionMode::AfterHead => {
                 let anything_else = |token: Token| {
                     self.insert_phantom(local_name!("body"));
+                    self.frameset_ok.set(true);
                     ProcessResult::Reprocess(InsertionMode::InBody, token)
                 };
 
