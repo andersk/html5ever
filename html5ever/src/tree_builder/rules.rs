@@ -820,6 +820,7 @@ where
                         )
                     {
                         self.unexpected(&tag);
+                        return ProcessResult::Done;
                     }
 
                     if self.in_scope_named(default_scope, local_name!("select")) {

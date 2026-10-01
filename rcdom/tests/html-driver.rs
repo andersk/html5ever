@@ -18,6 +18,22 @@ fn from_utf8() {
 }
 
 #[test]
+fn input_ignored_in_select_fragment() {
+    let dom = driver::parse_fragment(
+        RcDom::default(),
+        Default::default(),
+        html5ever::QualName::new(None, html5ever::ns!(html), html5ever::local_name!("select")),
+        vec![],
+        true,
+    )
+    .one("<input><option>");
+    let mut serialized = Vec::new();
+    let html: SerializableHandle = dom.document.children.borrow()[0].clone().into();
+    serialize::serialize(&mut serialized, &html, Default::default()).unwrap();
+    assert_eq!(String::from_utf8(serialized).unwrap(), "<option></option>");
+}
+
+#[test]
 fn many_templates() {
     let mut body = String::new();
     for _ in 1..10000 {
